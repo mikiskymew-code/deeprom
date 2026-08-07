@@ -1,0 +1,6 @@
+{
+  "name": "อะไหล่ดีพร้อมแอร์",
+  "description": "ศูนย์รวมอะไหล่และอุปกรณ์ติดตั้งแอร์คุณภาพสูง ราคาส่งสำหรับช่างและผู้รับเหมา",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
