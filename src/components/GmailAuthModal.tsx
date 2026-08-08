@@ -91,8 +91,12 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
                 {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G'}
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-bold text-neutral-900 truncate">{currentUser.name}</div>
-                <div className="text-xs font-mono text-neutral-500 truncate">{currentUser.email}</div>
+                <div className="text-sm font-bold text-neutral-900 truncate">
+                  {currentUser.role === 'OWNER' ? 'Super (Super Owner)' : currentUser.role === 'ADMIN' ? 'แอดมิน (Admin)' : currentUser.name}
+                </div>
+                <div className="text-xs font-mono text-neutral-500 truncate">
+                  {currentUser.role === 'OWNER' ? 'm***@gmail.com' : currentUser.role === 'ADMIN' ? 's***@gmail.com' : currentUser.email.replace(/(.{2})(.*)(?=@)/, '$1***')}
+                </div>
               </div>
             </div>
 
@@ -121,12 +125,12 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
           >
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 rounded-full bg-amber-400 text-black flex items-center justify-center font-black">
-                M
+                S
               </div>
               <div>
                 <div className="text-xs font-extrabold text-neutral-900 flex items-center space-x-1.5">
-                  <span>mikiskymew@gmail.com</span>
-                  <span className="bg-black text-amber-400 text-[9px] font-black px-1.5 py-0.2 rounded">SUPER OWNER</span>
+                  <span>Super (Super Owner)</span>
+                  <span className="bg-black text-amber-400 text-[9px] font-black px-1.5 py-0.2 rounded">SUPER</span>
                 </div>
                 <div className="text-[11px] text-amber-900 font-medium">
                   ผู้คุมสิทธิ์ทั้งหมด (ควบคุมการอนุมัติและจัดการระบบ)
@@ -150,7 +154,7 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
               </div>
               <div>
                 <div className="text-xs font-extrabold text-neutral-900 flex items-center space-x-1.5">
-                  <span>sp-deeprom@gmail.com</span>
+                  <span>แอดมิน (Admin)</span>
                   <span className="bg-amber-800 text-amber-100 text-[9px] font-black px-1.5 py-0.2 rounded">ADMIN</span>
                 </div>
                 <div className="text-[11px] text-amber-900 font-medium">
@@ -174,7 +178,7 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
                 S
               </div>
               <div>
-                <div className="text-xs font-bold text-neutral-900">somchai.hvac@gmail.com</div>
+                <div className="text-xs font-bold text-neutral-900">สมชาย (ช่าง VIP: s***@gmail.com)</div>
                 <div className="text-[11px] text-emerald-600 font-medium">ช่างรับเหมาที่ได้รับอนุญาตแล้ว</div>
               </div>
             </div>
@@ -196,7 +200,7 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
                 N
               </div>
               <div>
-                <div className="text-xs font-bold text-neutral-900">new.contractor@gmail.com</div>
+                <div className="text-xs font-bold text-neutral-900">ช่างใหม่ (n***@gmail.com)</div>
                 <div className="text-[11px] text-amber-600 font-medium">บัญชีใหม่ (ต้องส่งคำขออนุมัติ)</div>
               </div>
             </div>

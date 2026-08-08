@@ -76,9 +76,15 @@ export const Header: React.FC<HeaderProps> = ({
                 className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1.5 border border-neutral-700 transition-all"
               >
                 <div className="w-4 h-4 rounded-full bg-amber-400 text-black text-[10px] font-black flex items-center justify-center">
-                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G'}
+                  {currentUser.role === 'OWNER' ? 'S' : currentUser.role === 'ADMIN' ? 'A' : (currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G')}
                 </div>
-                <span className="max-w-[80px] sm:max-w-[120px] truncate">{currentUser.email}</span>
+                <span className="font-extrabold text-amber-300">
+                  {currentUser.role === 'OWNER'
+                    ? 'Super'
+                    : currentUser.role === 'ADMIN'
+                    ? 'แอดมิน'
+                    : (currentUser.name && currentUser.name !== currentUser.email ? currentUser.name : currentUser.email.replace(/(.{2})(.*)(?=@)/, '$1***'))}
+                </span>
                 <span className={`text-[9px] px-1 rounded font-mono ${
                   currentUser.role === 'OWNER' 
                     ? 'bg-amber-400 text-black font-extrabold' 

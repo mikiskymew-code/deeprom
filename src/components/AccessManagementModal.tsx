@@ -216,7 +216,18 @@ export const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                     >
                       <div className="flex items-center space-x-2 min-w-0">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span className="font-mono font-bold text-neutral-800 truncate">{email}</span>
+                        <span className="font-bold text-neutral-800 truncate">
+                          {email.toLowerCase().includes('mikis') 
+                            ? 'Super (Super Owner)' 
+                            : email.toLowerCase().includes('sp-deeprom') || email.toLowerCase().includes('sp.deeprom')
+                            ? 'แอดมิน (Admin)' 
+                            : email}
+                        </span>
+                        {(email.toLowerCase().includes('mikis') || email.toLowerCase().includes('sp-deeprom')) && (
+                          <span className="bg-amber-100 text-amber-900 text-[9px] font-black px-1.5 py-0.2 rounded font-mono">
+                            {email.toLowerCase().includes('mikis') ? 'SUPER' : 'ADMIN'}
+                          </span>
+                        )}
                       </div>
                       <button
                         onClick={() => onRemoveAllowedEmail(email)}

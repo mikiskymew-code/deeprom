@@ -103,18 +103,18 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
             <div className="grid grid-cols-2 gap-1.5 text-[11px]">
               <button
                 type="button"
-                onClick={() => onLoginDirect('mikiskymew@gmail.com', 'ผู้คุมสิทธิ์ระบบ')}
+                onClick={() => onLoginDirect('mikiskymew@gmail.com', 'Super')}
                 className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate transition-all"
               >
-                👑 mikiskymew@gmail.com
+                👑 Super (Super Owner)
                 <span className="block text-[9px] font-normal text-amber-800">ผู้คุมสิทธิ์ทั้งหมด</span>
               </button>
               <button
                 type="button"
-                onClick={() => onLoginDirect('sp-deeprom@gmail.com', 'แอดมินดีพร้อม')}
+                onClick={() => onLoginDirect('sp-deeprom@gmail.com', 'แอดมิน')}
                 className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate transition-all"
               >
-                🛠️ sp-deeprom@gmail.com
+                🛠️ แอดมิน (Admin)
                 <span className="block text-[9px] font-normal text-amber-800">แอดมินดีพร้อมแอร์</span>
               </button>
               <button
@@ -122,7 +122,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                 onClick={() => onLoginDirect('somchai.hvac@gmail.com', 'สมชาย ช่าง VIP')}
                 className="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 p-2 rounded-xl text-left font-bold text-emerald-950 truncate col-span-2 transition-all"
               >
-                👷 somchai.hvac@gmail.com (ช่างผู้รับเหมาสมาชิก)
+                👷 สมชาย (ช่างสมาชิก VIP)
               </button>
             </div>
           </div>
@@ -138,7 +138,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                   ❌ ไม่พบอีเมล์นี้ในระบบสมาชิก!
                 </span>
                 <span className="text-[11px] text-red-700 font-medium block mt-0.5 font-mono">
-                  {currentUser.email}
+                  {currentUser.email.replace(/(.{2})(.*)(?=@)/, '$1***')}
                 </span>
                 <p className="text-[11px] text-red-800 font-medium mt-1 leading-relaxed">
                   อีเมล์นี้ยังไม่ได้รับอนุมัติให้เข้าใช้งานระบบแคตตาล็อกแอร์ดีพร้อม ท่านจะไม่สามารถเข้าดูหรือสั่งซื้อสินค้าได้จนกว่าจะได้รับการอนุมัติ

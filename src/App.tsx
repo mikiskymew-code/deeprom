@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Product, CartItem, FilterState, TabType, Order, UserProfile, AuthUser, AccessRequest, UserRole } from './types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_USER } from './data/products';
-import { LayoutGrid, List, CheckCircle } from 'lucide-react';
+import { LayoutGrid, List, CheckCircle, BellRing, KeyRound } from 'lucide-react';
 import { Header } from './components/Header';
 import { FilterBar } from './components/FilterBar';
 import { ProductCard } from './components/ProductCard';
@@ -21,7 +21,22 @@ import { EditProductModal } from './components/EditProductModal';
 import { AccessDeniedView } from './components/AccessDeniedView';
 import { DailySalesReportModal } from './components/DailySalesReportModal';
 import { GoogleDriveModal } from './components/GoogleDriveModal';
+import { AdminPinModal } from './components/AdminPinModal';
 import { sendOrderEmailNotification, sendAccessRequestEmailNotification, TARGET_ORDER_EMAIL } from './utils/emailNotify';
+import {
+  subscribeProducts,
+  saveProductToFirestore,
+  saveAllProductsToFirestore,
+  deleteProductFromFirestore,
+  subscribeAllowedEmails,
+  saveAllowedEmailsToFirestore,
+  subscribeAccessRequests,
+  addAccessRequestToFirestore,
+  updateAccessRequestStatusInFirestore,
+  subscribeOrders,
+  saveOrderToFirestore,
+  subscribeSecurityPin
+} from './utils/firebaseStore';
 
 const SUPER_OWNER_EMAIL = 'mikiskymew@gmail.com';
 const ADMIN_EMAILS = ['sp-deeprom@gmail.com', 'sp.deeprom@gmail.com', 'mikiskymew@gmail.com'];
@@ -38,11 +53,10 @@ const isAdminEmail = (email: string) => {
   return ADMIN_EMAILS.some((a) => a.toLowerCase() === clean);
 };
 
-// BroadcastChannel for instant real-time sync across desktop/mobile views and tabs
+// BroadcastChannel for instant local tab sync
 const dbSyncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
   ? new BroadcastChannel('hvac_realtime_db_channel')
   : null;
-
 
 export default function App() {
   // Navigation & View States
@@ -56,7 +70,7 @@ export default function App() {
     }
   };
 
-  // Data States (Persisted in localStorage for unified Database across Desktop & Mobile)
+  // Data States
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('hvac_products');
     if (saved) {
@@ -67,11 +81,6 @@ export default function App() {
     }
     return INITIAL_PRODUCTS;
   });
-
-  useEffect(() => {
-    localStorage.setItem('hvac_products', JSON.stringify(products));
-    notifyDatabaseChange();
-  }, [products]);
 
   const [cart, setCart] = useState<Record<string, number>>(() => {
     const saved = localStorage.getItem('hvac_cart');
@@ -97,11 +106,6 @@ export default function App() {
     return INITIAL_ORDERS;
   });
 
-  useEffect(() => {
-    localStorage.setItem('hvac_orders', JSON.stringify(orders));
-    notifyDatabaseChange();
-  }, [orders]);
-
   const [user, setUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('hvac_user_profile');
     if (saved) {
@@ -118,7 +122,7 @@ export default function App() {
     notifyDatabaseChange();
   }, [user]);
 
-  // Favorites / Liked Products State (Persisted in localStorage)
+  // Favorites
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('hvac_favorite_ids');
     if (saved) {
@@ -138,7 +142,7 @@ export default function App() {
     );
   };
 
-  // Sync Whitelist to LocalStorage
+  // Allowed Emails
   const [allowedEmails, setAllowedEmails] = useState<string[]>(() => {
     const saved = localStorage.getItem('hvac_allowed_emails');
     if (saved) {
@@ -152,68 +156,66 @@ export default function App() {
     return [SUPER_OWNER_EMAIL, ...ADMIN_EMAILS, 'somchai.hvac@gmail.com'];
   });
 
-  useEffect(() => {
-    localStorage.setItem('hvac_allowed_emails', JSON.stringify(allowedEmails));
-    notifyDatabaseChange();
-  }, [allowedEmails]);
+  // Access Requests
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
+  const prevPendingCountRef = useRef<number>(0);
 
-  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>(() => {
-    const saved = localStorage.getItem('hvac_access_requests');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-    }
-    return [
-      {
-        id: 'req-1',
-        email: 'new.contractor@gmail.com',
-        name: 'ช่างใหม่ รออนุมัติ',
-        requestedAt: 'วันนี้ 09:30 น.',
-        status: 'PENDING'
+  // Security PIN state
+  const [securityPin, setSecurityPin] = useState<string>('8888');
+
+  // Pending Admin Login Challenge State (for PIN verification)
+  const [pendingAdminAuth, setPendingAdminAuth] = useState<{
+    email: string;
+    name: string;
+    roleName: string;
+  } | null>(null);
+
+  // Realtime Firestore Subscriptions
+  useEffect(() => {
+    const unsubProducts = subscribeProducts((remoteProds) => {
+      if (remoteProds && remoteProds.length > 0) {
+        setProducts(remoteProds);
+        localStorage.setItem('hvac_products', JSON.stringify(remoteProds));
       }
-    ];
-  });
+    });
 
-  useEffect(() => {
-    localStorage.setItem('hvac_access_requests', JSON.stringify(accessRequests));
-    notifyDatabaseChange();
-  }, [accessRequests]);
-
-  // Realtime Listener to Sync State Across Desktop, Mobile & Multiple Tabs
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const p = localStorage.getItem('hvac_products');
-        if (p) setProducts(JSON.parse(p));
-
-        const o = localStorage.getItem('hvac_orders');
-        if (o) setOrders(JSON.parse(o));
-
-        const u = localStorage.getItem('hvac_user_profile');
-        if (u) setUser(JSON.parse(u));
-
-        const c = localStorage.getItem('hvac_cart');
-        if (c) setCart(JSON.parse(c));
-
-        const f = localStorage.getItem('hvac_favorite_ids');
-        if (f) setFavoriteIds(JSON.parse(f));
-
-        const a = localStorage.getItem('hvac_allowed_emails');
-        if (a) setAllowedEmails(JSON.parse(a));
-
-        const r = localStorage.getItem('hvac_access_requests');
-        if (r) setAccessRequests(JSON.parse(r));
-      } catch (e) {
-        console.log('Sync error:', e);
+    const unsubAllowed = subscribeAllowedEmails((remoteEmails) => {
+      if (remoteEmails && remoteEmails.length > 0) {
+        const merged = [...new Set([...remoteEmails, SUPER_OWNER_EMAIL, ...ADMIN_EMAILS])];
+        setAllowedEmails(merged);
+        localStorage.setItem('hvac_allowed_emails', JSON.stringify(merged));
       }
-    };
+    });
 
-    window.addEventListener('storage', handleSync);
-    if (dbSyncChannel) {
-      dbSyncChannel.onmessage = handleSync;
-    }
+    const unsubRequests = subscribeAccessRequests((remoteReqs) => {
+      setAccessRequests(remoteReqs);
+      localStorage.setItem('hvac_access_requests', JSON.stringify(remoteReqs));
+
+      const pending = remoteReqs.filter((r) => r.status === 'PENDING');
+      if (pending.length > prevPendingCountRef.current && prevPendingCountRef.current !== 0) {
+        const newest = pending[0];
+        setOrderToastMsg(`🔔 มีคำขออนุมัติใหม่จากคุณ ${newest?.name || 'ช่างใหม่'} (${newest?.email})!`);
+      }
+      prevPendingCountRef.current = pending.length;
+    });
+
+    const unsubOrders = subscribeOrders((remoteOrders) => {
+      if (remoteOrders && remoteOrders.length > 0) {
+        setOrders(remoteOrders);
+        localStorage.setItem('hvac_orders', JSON.stringify(remoteOrders));
+      }
+    });
+
+    const unsubPin = subscribeSecurityPin((pin) => {
+      setSecurityPin(pin);
+    });
 
     return () => {
-      window.removeEventListener('storage', handleSync);
+      unsubProducts();
+      unsubAllowed();
+      unsubRequests();
+      unsubOrders();
+      unsubPin();
     };
   }, []);
 
@@ -264,16 +266,23 @@ export default function App() {
     }
   }, [currentUser, allowedEmails, accessRequests]);
 
-  // Handle Login via Gmail
+  // Handle Login Request - If Super Owner or Admin, prompt PIN Verification
   const handleLogin = (email: string, name?: string) => {
     const cleanEmail = email.toLowerCase().trim();
-    let role: UserRole = 'PENDING';
 
-    if (isSuperOwnerEmail(cleanEmail)) {
-      role = 'OWNER';
-    } else if (isAdminEmail(cleanEmail)) {
-      role = 'ADMIN';
-    } else if (allowedEmails.some((e) => e.toLowerCase().trim() === cleanEmail)) {
+    if (isSuperOwnerEmail(cleanEmail) || isAdminEmail(cleanEmail)) {
+      // Trigger PIN Modal Protection!
+      setPendingAdminAuth({
+        email: cleanEmail,
+        name: name || (isSuperOwnerEmail(cleanEmail) ? 'เจ้าของระบบ' : 'แอดมินดีพร้อม'),
+        roleName: isSuperOwnerEmail(cleanEmail) ? 'SUPER OWNER' : 'ADMIN'
+      });
+      return;
+    }
+
+    // Regular User direct check against Firestore Allowed List
+    let role: UserRole = 'PENDING';
+    if (allowedEmails.some((e) => e.toLowerCase().trim() === cleanEmail)) {
       role = 'AUTHORIZED';
     }
 
@@ -289,6 +298,35 @@ export default function App() {
       email: cleanEmail,
       name: name || prev.name
     }));
+
+    if (role === 'AUTHORIZED') {
+      setOrderToastMsg(`ยินดีต้อนรับคุณ ${newUser.name} เข้าสู่ระบบดีพร้อมแอร์`);
+      setTimeout(() => setOrderToastMsg(null), 4000);
+    }
+  };
+
+  // Confirm Admin PIN Verification
+  const handleConfirmAdminPinSuccess = () => {
+    if (!pendingAdminAuth) return;
+
+    const role: UserRole = isSuperOwnerEmail(pendingAdminAuth.email) ? 'OWNER' : 'ADMIN';
+    const newUser: AuthUser = {
+      email: pendingAdminAuth.email,
+      name: pendingAdminAuth.name,
+      role
+    };
+
+    setCurrentUser(newUser);
+    setUser((prev) => ({
+      ...prev,
+      email: pendingAdminAuth.email,
+      name: pendingAdminAuth.name
+    }));
+
+    setOrderToastMsg(`🔐 ปลดล็อกรหัสความปลอดภัยสำเร็จ! เข้าใช้งานเป็น ${pendingAdminAuth.roleName}`);
+    setTimeout(() => setOrderToastMsg(null), 5000);
+
+    setPendingAdminAuth(null);
   };
 
   const handleLogout = () => {
@@ -296,121 +334,125 @@ export default function App() {
   };
 
   // Owner Approve Access Request
-  const handleApproveRequest = (requestId: string) => {
+  const handleApproveRequest = async (requestId: string) => {
     const req = accessRequests.find((r) => r.id === requestId);
     if (req) {
       const cleanEmail = req.email.toLowerCase().trim();
-      setAllowedEmails((prev) => [...new Set([...prev, cleanEmail])]);
-      setAccessRequests((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, status: 'APPROVED' } : r))
-      );
-      setOrderToastMsg(`อนุมัติสิทธิ์เข้าใช้งานให้คุณ "${req.name}" (${cleanEmail}) เรียบร้อยแล้ว`);
-      setTimeout(() => {
-        setOrderToastMsg(null);
-      }, 6000);
+      const updatedAllowed = [...new Set([...allowedEmails, cleanEmail])];
+      setAllowedEmails(updatedAllowed);
+      
+      // Update Firestore
+      await updateAccessRequestStatusInFirestore(requestId, 'APPROVED');
+      await saveAllowedEmailsToFirestore(updatedAllowed);
+
+      setOrderToastMsg(`✅ อนุมัติสิทธิ์ให้คุณ "${req.name}" (${cleanEmail}) เรียบร้อยแล้ว (ซิงค์ทุกอุปกรณ์)`);
+      setTimeout(() => setOrderToastMsg(null), 6000);
     }
   };
 
   // Owner Reject Access Request
-  const handleRejectRequest = (requestId: string) => {
-    setAccessRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: 'REJECTED' } : r))
-    );
+  const handleRejectRequest = async (requestId: string) => {
+    await updateAccessRequestStatusInFirestore(requestId, 'REJECTED');
   };
 
   // Owner Add Allowed Email Directly
-  const handleAddAllowedEmail = (email: string) => {
+  const handleAddAllowedEmail = async (email: string) => {
     const clean = email.toLowerCase().trim();
     if (!clean || !clean.includes('@')) return;
 
-    setAllowedEmails((prev) => [...new Set([...prev, clean])]);
-    
-    // Also approve pending request if matching
-    setAccessRequests((prev) =>
-      prev.map((r) => (r.email.toLowerCase().trim() === clean ? { ...r, status: 'APPROVED' } : r))
-    );
+    const updatedAllowed = [...new Set([...allowedEmails, clean])];
+    setAllowedEmails(updatedAllowed);
+    await saveAllowedEmailsToFirestore(updatedAllowed);
 
-    setOrderToastMsg(`เพิ่มอีเมล ${clean} เข้าสู่ระบบ Whitelist และอนุมัติสิทธิ์สำเร็จ`);
-    setTimeout(() => {
-      setOrderToastMsg(null);
-    }, 6000);
+    // Also approve pending request if matching
+    const matchingReq = accessRequests.find((r) => r.email.toLowerCase().trim() === clean);
+    if (matchingReq) {
+      await updateAccessRequestStatusInFirestore(matchingReq.id, 'APPROVED');
+    }
+
+    setOrderToastMsg(`เพิ่มอีเมล ${clean} เข้าสู่ระบบ Whitelist เรียบร้อยแล้ว`);
+    setTimeout(() => setOrderToastMsg(null), 5000);
   };
 
   // Owner Remove Allowed Email
-  const handleRemoveAllowedEmail = (email: string) => {
+  const handleRemoveAllowedEmail = async (email: string) => {
     const clean = email.toLowerCase().trim();
-    setAllowedEmails((prev) => prev.filter((e) => e.toLowerCase().trim() !== clean));
+    const updatedAllowed = allowedEmails.filter((e) => e.toLowerCase().trim() !== clean);
+    setAllowedEmails(updatedAllowed);
+    await saveAllowedEmailsToFirestore(updatedAllowed);
+
     setOrderToastMsg(`ยกเลิกสิทธิ์การเข้าใช้งานของอีเมล ${clean} เรียบร้อยแล้ว`);
-    setTimeout(() => {
-      setOrderToastMsg(null);
-    }, 5000);
+    setTimeout(() => setOrderToastMsg(null), 4000);
   };
 
   // User Request Access
-  const handleRequestAccess = (email: string, name: string) => {
+  const handleRequestAccess = async (email: string, name: string) => {
     const cleanEmail = email.toLowerCase().trim();
     const cleanName = name || cleanEmail.split('@')[0];
 
-    const existing = accessRequests.find((r) => r.email.toLowerCase().trim() === cleanEmail);
-    if (!existing) {
-      const newReq: AccessRequest = {
-        id: `req-${Date.now()}`,
-        email: cleanEmail,
-        name: cleanName,
-        requestedAt: new Date().toLocaleString('th-TH'),
-        status: 'PENDING'
-      };
-      setAccessRequests((prev) => [newReq, ...prev]);
-    } else if (existing.status === 'REJECTED') {
-      setAccessRequests((prev) =>
-        prev.map((r) =>
-          r.email.toLowerCase().trim() === cleanEmail
-            ? { ...r, status: 'PENDING', requestedAt: new Date().toLocaleString('th-TH') }
-            : r
-        )
-      );
-    }
+    const newReq: AccessRequest = {
+      id: `req-${Date.now()}`,
+      email: cleanEmail,
+      name: cleanName,
+      requestedAt: new Date().toLocaleString('th-TH'),
+      status: 'PENDING'
+    };
 
-    // Always trigger email notification to sp.deeprom@gmail.com
+    // Save to Firestore
+    await addAccessRequestToFirestore(newReq);
+
+    // Trigger Email Notification targeting sp.deeprom@gmail.com
     sendAccessRequestEmailNotification(cleanEmail, cleanName);
 
-    setOrderToastMsg(`ส่งข้อมูลคำขอสมัครของคุณ (${cleanEmail}) ไปยังอีเมลผู้ดูแลระบบ (${TARGET_ORDER_EMAIL}) เรียบร้อยแล้ว`);
-    setTimeout(() => {
-      setOrderToastMsg(null);
-    }, 7000);
+    setOrderToastMsg(`ยื่นคำขออนุมัติของ ${cleanEmail} ถึงผู้ดูแลระบบเรียบร้อยแล้ว รอการอนุมัติ`);
+    setTimeout(() => setOrderToastMsg(null), 7000);
   };
-
 
   // Product Edit Modal State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditProductModalOpen, setIsEditProductModalOpen] = useState(false);
 
-  // Handle Save or Create Product
-  const handleSaveProduct = (updatedProduct: Product) => {
-    setProducts((prev) => {
-      const exists = prev.some((p) => p.id === updatedProduct.id);
-      if (exists) {
-        return prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
-      } else {
-        return [updatedProduct, ...prev];
-      }
-    });
+  // Handle Save or Create Product (Syncs to Firestore)
+  const handleSaveProduct = async (updatedProduct: Product) => {
+    const updatedList = products.some((p) => p.id === updatedProduct.id)
+      ? products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+      : [updatedProduct, ...products];
+
+    setProducts(updatedList);
+    await saveProductToFirestore(updatedProduct);
+
+    setOrderToastMsg(`บันทึกข้อมูลสินค้า ${updatedProduct.name} ลงสู่ฐานข้อมูลเรียบร้อยแล้ว`);
+    setTimeout(() => setOrderToastMsg(null), 4000);
+  };
+
+  // Handle Import Multiple Excel Products (Syncs to Firestore)
+  const handleImportProducts = async (newProducts: Product[]) => {
+    const combined = [...newProducts, ...products];
+    setProducts(combined);
+    await saveAllProductsToFirestore(combined);
+
+    setOrderToastMsg(`นำเข้าสินค้าใหม่จำนวน ${newProducts.length} รายการ จาก Excel สู่ระบบเรียบร้อยแล้ว (ซิงค์มือถือแล็ปท็อป)`);
+    setTimeout(() => setOrderToastMsg(null), 6000);
   };
 
   // Handle Delete Single Product
-  const handleDeleteProduct = (productId: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+  const handleDeleteProduct = async (productId: string) => {
+    const filtered = products.filter((p) => p.id !== productId);
+    setProducts(filtered);
+    await deleteProductFromFirestore(productId);
   };
 
   // Handle Clear All Products
-  const handleDeleteAllProducts = () => {
+  const handleDeleteAllProducts = async () => {
     setProducts([]);
+    await saveAllProductsToFirestore([]);
   };
 
   // Handle Reset Default Products
-  const handleResetDefaultProducts = () => {
-    if (window.confirm('คุณต้องการรีเซ็ตคืนค่าสินค้าเป็นชุดเริ่มต้น 8 รายการใช่หรือไม่?')) {
+  const handleResetDefaultProducts = async () => {
+    if (window.confirm('คุณต้องการรีเซ็ตคืนค่าสินค้าเป็นชุดเริ่มต้นใช่หรือไม่?')) {
       setProducts(INITIAL_PRODUCTS);
+      await saveAllProductsToFirestore(INITIAL_PRODUCTS);
     }
   };
 
@@ -531,10 +573,10 @@ export default function App() {
   }, [products, searchQuery, filters]);
 
   // Handle Order Placement with Email Notification to sp.deeprom@gmail.com
-  const handlePlaceOrder = (items: CartItem[], total: number) => {
+  const handlePlaceOrder = async (items: CartItem[], total: number) => {
     const newOrder: Order = {
       id: `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: 'เมื่อครู่นี้',
+      date: new Date().toLocaleString('th-TH'),
       items: items.map((i) => ({
         productName: i.product.name,
         modelCode: i.product.modelCode,
@@ -548,12 +590,13 @@ export default function App() {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+    await saveOrderToFirestore(newOrder);
 
     // Trigger Email Notification targeting sp.deeprom@gmail.com
     sendOrderEmailNotification(newOrder, user.name, user.phone);
 
     // Show Toast Confirmation
-    setOrderToastMsg(`ส่งข้อมูลคำสั่งซื้อ ${newOrder.id} ไปยังอีเมล ${TARGET_ORDER_EMAIL} เรียบร้อยแล้ว`);
+    setOrderToastMsg(`ส่งข้อมูลคำสั่งซื้อ ${newOrder.id} ไปยังระบบเรียบร้อยแล้ว`);
     setTimeout(() => {
       setOrderToastMsg(null);
     }, 6000);
@@ -588,16 +631,23 @@ export default function App() {
           onLogout={handleLogout}
         />
 
-        {/* Realtime Order Email Alert Toast Banner */}
+        {/* Realtime Order/Request Toast Banner */}
         {orderToastMsg && (
-          <div className="mx-4 mt-3 bg-[#18181B] text-white p-3.5 rounded-2xl border-2 border-amber-400 shadow-xl flex items-center justify-between animate-in slide-in-from-top-3 duration-300">
+          <div 
+            onClick={() => {
+              if (orderToastMsg.includes('คำขออนุมัติ') && (currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN')) {
+                setIsAccessManagementOpen(true);
+              }
+            }}
+            className="mx-4 mt-3 bg-[#18181B] text-white p-3.5 rounded-2xl border-2 border-amber-400 shadow-xl flex items-center justify-between cursor-pointer animate-in slide-in-from-top-3 duration-300"
+          >
             <div className="flex items-center space-x-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-amber-400 text-black flex items-center justify-center font-black shrink-0">
-                <CheckCircle className="w-5 h-5 text-emerald-950" />
+                <BellRing className="w-4 h-4 text-black animate-bounce" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-black text-amber-400 truncate">
-                  แจ้งเตือนคำสั่งซื้อทางอีเมลสำเร็จ!
+                  แจ้งเตือนระบบดีพร้อมแอร์
                 </p>
                 <p className="text-[11px] text-neutral-200 font-medium truncate">
                   {orderToastMsg}
@@ -605,7 +655,10 @@ export default function App() {
               </div>
             </div>
             <button
-              onClick={() => setOrderToastMsg(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOrderToastMsg(null);
+              }}
               className="text-neutral-400 hover:text-white px-2 py-1 text-xs font-bold"
             >
               ปิด
@@ -716,18 +769,6 @@ export default function App() {
                       />
                     ))
                   )}
-
-                  {/* Bottom Infinite Loading Indicator */}
-                  <div className={`pt-6 pb-4 flex flex-col items-center justify-center space-y-2 text-center text-neutral-500 ${
-                    viewMode === 'grid' ? 'col-span-2' : ''
-                  }`}>
-                    <div className="w-9 h-9 border-2 border-black flex items-center justify-center p-1 bg-amber-400 rounded-md shadow-2xs relative">
-                      <div className="w-full h-full border-2 border-black" />
-                    </div>
-                    <span className="text-xs font-bold text-neutral-700 tracking-wider">
-                      กำลังโหลด...
-                    </span>
-                  </div>
                 </div>
               </main>
             )}
@@ -801,6 +842,16 @@ export default function App() {
         onPlaceOrder={handlePlaceOrder}
       />
 
+      {/* Admin PIN Protection Verification Modal */}
+      <AdminPinModal
+        isOpen={Boolean(pendingAdminAuth)}
+        targetEmail={pendingAdminAuth?.email || ''}
+        targetRoleName={pendingAdminAuth?.roleName || ''}
+        expectedPin={securityPin}
+        onClose={() => setPendingAdminAuth(null)}
+        onConfirmSuccess={handleConfirmAdminPinSuccess}
+      />
+
       {/* Stock Notification Signup Modal */}
       <NotifyModal
         product={selectedNotifyProduct}
@@ -872,11 +923,12 @@ export default function App() {
         onSaveProduct={handleSaveProduct}
         onDeleteProduct={handleDeleteProduct}
       />
-      {/* PDF/CSV Data Importer Modal with Forward Fill */}
+
+      {/* PDF/CSV Data Importer Modal */}
       <DataImporterModal
         isOpen={isImporterOpen}
         onClose={() => setIsImporterOpen(false)}
-        onImportProducts={(newProds) => setProducts((prev) => [...newProds, ...prev])}
+        onImportProducts={handleImportProducts}
       />
 
       {/* Daily Sales Report & Google Sheets / Excel Export Modal */}
@@ -892,7 +944,7 @@ export default function App() {
         onClose={() => setIsGoogleDriveOpen(false)}
         products={products}
         orders={orders}
-        onImportProducts={(newProds) => setProducts((prev) => [...newProds, ...prev])}
+        onImportProducts={handleImportProducts}
       />
     </div>
   );
