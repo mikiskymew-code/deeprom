@@ -2,9 +2,16 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-// Initialize or reuse Firebase App
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
+// Safe Firebase Initialization
+let auth: ReturnType<typeof getAuth> | null = null;
+try {
+  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  auth = getAuth(app);
+} catch (e) {
+  console.warn('Firebase initialization warning:', e);
+}
+
+export { auth };
 
 // Configure Google Auth Provider with Drive Scopes
 const provider = new GoogleAuthProvider();
@@ -20,6 +27,10 @@ export const initDriveAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
+  if (!auth) {
+    if (onAuthFailure) onAuthFailure();
+    return () => {};
+  }
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       if (cachedAccessToken) {
@@ -37,6 +48,9 @@ export const initDriveAuth = (
 
 // Sign in with Google Popup and obtain access token
 export const googleSignInWithDrive = async (): Promise<{ user: User; accessToken: string } | null> => {
+  if (!auth) {
+    throw new Error('ระบบ Google Auth ยังไม่ได้ถูกตั้งค่าหรือเปิดใช้งาน');
+  }
   try {
     isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
@@ -60,7 +74,9 @@ export const getDriveAccessToken = async (): Promise<string | null> => {
 };
 
 export const logoutDrive = async () => {
-  await signOut(auth);
+  if (auth) {
+    await signOut(auth);
+  }
   cachedAccessToken = null;
 };
 
