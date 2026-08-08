@@ -49,6 +49,10 @@ export type TabType = 'home' | 'catalog' | 'daily' | 'orders' | 'profile';
 export interface Order {
   id: string;
   date: string;
+  createdAtTimestamp?: number;
+  customerEmail?: string;
+  customerName?: string;
+  customerPhone?: string;
   items: {
     productName: string;
     modelCode: string;
@@ -71,7 +75,7 @@ export interface UserProfile {
   tier: 'ช่างทั่วไป' | 'ช่าง VIP (ส่วนลด 5%)' | 'ผู้รับเหมาโครงการ (ส่วนลด 10%)';
 }
 
-export type UserRole = 'OWNER' | 'AUTHORIZED' | 'PENDING' | 'REJECTED';
+export type UserRole = 'OWNER' | 'ADMIN' | 'AUTHORIZED' | 'PENDING' | 'REJECTED';
 
 export interface AuthUser {
   email: string;

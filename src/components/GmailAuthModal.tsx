@@ -114,26 +114,51 @@ export const GmailAuthModal: React.FC<GmailAuthModalProps> = ({
           {/* Owner Account Option */}
           <button
             onClick={() => {
-              onLogin(ownerEmail, 'เจ้าของระบบ (System Owner)');
+              onLogin('mikiskymew@gmail.com', 'ผู้คุมสิทธิ์ระบบ (Super Admin)');
               onClose();
             }}
             className="w-full bg-amber-50 hover:bg-amber-100/80 border-2 border-amber-400 p-3 rounded-2xl flex items-center justify-between text-left transition-all active:scale-98 shadow-xs"
           >
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 rounded-full bg-amber-400 text-black flex items-center justify-center font-black">
-                G
+                M
               </div>
               <div>
                 <div className="text-xs font-extrabold text-neutral-900 flex items-center space-x-1.5">
-                  <span>{ownerEmail}</span>
-                  <span className="bg-black text-amber-400 text-[9px] font-black px-1.5 py-0.2 rounded">OWNER</span>
+                  <span>mikiskymew@gmail.com</span>
+                  <span className="bg-black text-amber-400 text-[9px] font-black px-1.5 py-0.2 rounded">SUPER OWNER</span>
                 </div>
                 <div className="text-[11px] text-amber-900 font-medium">
-                  บัญชีเจ้าของระบบ (มีสิทธิ์เต็มและอนุมัติผู้ใช้อื่น)
+                  ผู้คุมสิทธิ์ทั้งหมด (ควบคุมการอนุมัติและจัดการระบบ)
                 </div>
               </div>
             </div>
             <LogIn className="w-4 h-4 text-amber-700" />
+          </button>
+
+          {/* Admin Account Option */}
+          <button
+            onClick={() => {
+              onLogin('sp-deeprom@gmail.com', 'แอดมินดีพร้อมแอร์ (Admin)');
+              onClose();
+            }}
+            className="w-full bg-amber-100/60 hover:bg-amber-100 border border-amber-300 p-3 rounded-2xl flex items-center justify-between text-left transition-all active:scale-98"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-9 h-9 rounded-full bg-amber-500 text-black flex items-center justify-center font-black">
+                A
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-neutral-900 flex items-center space-x-1.5">
+                  <span>sp-deeprom@gmail.com</span>
+                  <span className="bg-amber-800 text-amber-100 text-[9px] font-black px-1.5 py-0.2 rounded">ADMIN</span>
+                </div>
+                <div className="text-[11px] text-amber-900 font-medium">
+                  แอดมิน (ปรับราคา, แก้ไขสินค้า, กดรับออเดอร์เตรียมสินค้า)
+                </div>
+              </div>
+            </div>
+            <LogIn className="w-4 h-4 text-amber-800" />
           </button>
 
           {/* Contractor Pre-approved option */}

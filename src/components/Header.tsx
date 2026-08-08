@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
           {currentUser ? (
             <div className="flex items-center space-x-2">
               {/* Access Control & Product Management Button */}
-              {(currentUser.role === 'OWNER' || currentUser.role === 'AUTHORIZED') && (
+              {(currentUser.role === 'OWNER' || currentUser.role === 'ADMIN') && (
                 <button
                   onClick={onOpenAccessManagement}
                   className="bg-amber-400 hover:bg-amber-300 text-black px-2.5 py-1 rounded-lg text-[11px] font-extrabold flex items-center space-x-1.5 shadow-xs transition-all"
@@ -78,9 +78,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
                 <span className="max-w-[90px] sm:max-w-[130px] truncate">{currentUser.email}</span>
                 <span className={`text-[9px] px-1 rounded font-mono ${
-                  currentUser.role === 'OWNER' ? 'bg-amber-400 text-black font-extrabold' : 'bg-emerald-800 text-emerald-200'
+                  currentUser.role === 'OWNER' 
+                    ? 'bg-amber-400 text-black font-extrabold' 
+                    : currentUser.role === 'ADMIN'
+                    ? 'bg-amber-600 text-white font-bold'
+                    : 'bg-emerald-800 text-emerald-200'
                 }`}>
-                  {currentUser.role === 'OWNER' ? 'OWNER' : 'STAFF'}
+                  {currentUser.role === 'OWNER' ? 'SUPER' : currentUser.role === 'ADMIN' ? 'ADMIN' : 'CLIENT'}
                 </span>
               </button>
             </div>
@@ -117,40 +121,45 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="flex items-center space-x-1.5 sm:space-x-2">
-            {/* Google Drive Integration Button */}
-            {onOpenGoogleDriveModal && (
-              <button
-                onClick={onOpenGoogleDriveModal}
-                className="h-10 px-2 sm:px-2.5 rounded-2xl bg-[#18181B] text-amber-400 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-black border border-amber-400/40"
-                title="Google Drive Cloud Integration"
-              >
-                <HardDrive className="w-4 h-4 text-amber-400" />
-                <span className="hidden lg:inline">Google Drive</span>
-              </button>
-            )}
+            {/* Admin / Owner Only Tools */}
+            {currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN') && (
+              <>
+                {/* Google Drive Integration Button */}
+                {onOpenGoogleDriveModal && (
+                  <button
+                    onClick={onOpenGoogleDriveModal}
+                    className="h-10 px-2 sm:px-2.5 rounded-2xl bg-[#18181B] text-amber-400 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-black border border-amber-400/40"
+                    title="Google Drive Cloud Integration"
+                  >
+                    <HardDrive className="w-4 h-4 text-amber-400" />
+                    <span className="hidden lg:inline">Google Drive</span>
+                  </button>
+                )}
 
-            {/* Sales Excel / Google Sheets Report Button */}
-            {onOpenSalesReportModal && (
-              <button
-                onClick={onOpenSalesReportModal}
-                className="h-10 px-2 rounded-2xl bg-emerald-800 text-emerald-100 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-emerald-900"
-                title="รายงานสรุปยอดขาย / Google Sheets & Excel"
-              >
-                <TrendingUp className="w-4 h-4 text-amber-300" />
-                <span className="hidden md:inline">ยอดขาย/Excel</span>
-              </button>
-            )}
+                {/* Sales Excel / Google Sheets Report Button */}
+                {onOpenSalesReportModal && (
+                  <button
+                    onClick={onOpenSalesReportModal}
+                    className="h-10 px-2 rounded-2xl bg-emerald-800 text-emerald-100 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-emerald-900"
+                    title="รายงานสรุปยอดขาย / Google Sheets & Excel"
+                  >
+                    <TrendingUp className="w-4 h-4 text-amber-300" />
+                    <span className="hidden md:inline">ยอดขาย/Excel</span>
+                  </button>
+                )}
 
-            {/* PDF/CSV Data Importer Button */}
-            {onOpenImporterModal && (
-              <button
-                onClick={onOpenImporterModal}
-                className="h-10 px-2 rounded-2xl bg-black text-amber-300 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-neutral-800"
-                title="นำเข้าข้อมูล PDF / CSV (Forward Fill)"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-amber-400" />
-                <span className="hidden md:inline">นำเข้า PDF</span>
-              </button>
+                {/* PDF/CSV Data Importer Button */}
+                {onOpenImporterModal && (
+                  <button
+                    onClick={onOpenImporterModal}
+                    className="h-10 px-2 rounded-2xl bg-black text-amber-300 font-extrabold text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all hover:bg-neutral-800"
+                    title="นำเข้าข้อมูล PDF / CSV (Forward Fill)"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-amber-400" />
+                    <span className="hidden md:inline">นำเข้า PDF</span>
+                  </button>
+                )}
+              </>
             )}
 
             {/* Search Toggle Button */}

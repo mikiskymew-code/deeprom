@@ -1,6 +1,7 @@
 import { Order } from '../types';
 
-export const TARGET_ORDER_EMAIL = 'sp.deeprom@gmail.com';
+export const TARGET_ORDER_EMAIL = 'sp-deeprom@gmail.com';
+export const SUPER_ADMIN_EMAIL = 'mikiskymew@gmail.com';
 
 export interface EmailNotifyLog {
   id: string;

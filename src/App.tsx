@@ -23,13 +23,19 @@ import { DailySalesReportModal } from './components/DailySalesReportModal';
 import { GoogleDriveModal } from './components/GoogleDriveModal';
 import { sendOrderEmailNotification, sendAccessRequestEmailNotification, TARGET_ORDER_EMAIL } from './utils/emailNotify';
 
-const OWNER_EMAILS = ['sp.deeprom@gmail.com', 'mikiskymew@gmail.com'];
-const OWNER_EMAIL = 'sp.deeprom@gmail.com';
+const SUPER_OWNER_EMAIL = 'mikiskymew@gmail.com';
+const ADMIN_EMAILS = ['sp-deeprom@gmail.com', 'sp.deeprom@gmail.com', 'mikiskymew@gmail.com'];
+const OWNER_EMAIL = 'mikiskymew@gmail.com';
 
-const isOwnerEmail = (email: string) => {
+const isSuperOwnerEmail = (email: string) => {
+  if (!email) return false;
+  return email.toLowerCase().trim() === SUPER_OWNER_EMAIL.toLowerCase();
+};
+
+const isAdminEmail = (email: string) => {
   if (!email) return false;
   const clean = email.toLowerCase().trim();
-  return OWNER_EMAILS.some((o) => o.toLowerCase() === clean);
+  return ADMIN_EMAILS.some((a) => a.toLowerCase() === clean);
 };
 
 // BroadcastChannel for instant real-time sync across desktop/mobile views and tabs
@@ -139,11 +145,11 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 0) {
-          return [...new Set([...parsed, ...OWNER_EMAILS, 'somchai.hvac@gmail.com'])];
+          return [...new Set([...parsed, SUPER_OWNER_EMAIL, ...ADMIN_EMAILS, 'somchai.hvac@gmail.com'])];
         }
       } catch (e) { /* fallback */ }
     }
-    return [...OWNER_EMAILS, 'somchai.hvac@gmail.com'];
+    return [SUPER_OWNER_EMAIL, ...ADMIN_EMAILS, 'somchai.hvac@gmail.com'];
   });
 
   useEffect(() => {
@@ -211,14 +217,14 @@ export default function App() {
     };
   }, []);
 
-  // Current logged in Gmail user state (Default to system owner sp.deeprom@gmail.com)
+  // Current logged in Gmail user state (Default to system owner mikiskymew@gmail.com)
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('hvac_current_user');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
     return {
-      email: OWNER_EMAIL,
+      email: SUPER_OWNER_EMAIL,
       name: 'เจ้าของระบบ (System Owner)',
       role: 'OWNER'
     };
@@ -235,8 +241,10 @@ export default function App() {
       let currentRole: UserRole = 'PENDING';
       const cleanUserEmail = currentUser.email.toLowerCase().trim();
 
-      if (isOwnerEmail(cleanUserEmail)) {
+      if (isSuperOwnerEmail(cleanUserEmail)) {
         currentRole = 'OWNER';
+      } else if (isAdminEmail(cleanUserEmail)) {
+        currentRole = 'ADMIN';
       } else if (allowedEmails.some((e) => e.toLowerCase().trim() === cleanUserEmail)) {
         currentRole = 'AUTHORIZED';
       } else {
@@ -265,8 +273,10 @@ export default function App() {
     const cleanEmail = email.toLowerCase().trim();
     let role: UserRole = 'PENDING';
 
-    if (isOwnerEmail(cleanEmail)) {
+    if (isSuperOwnerEmail(cleanEmail)) {
       role = 'OWNER';
+    } else if (isAdminEmail(cleanEmail)) {
+      role = 'ADMIN';
     } else if (allowedEmails.some((e) => e.toLowerCase().trim() === cleanEmail)) {
       role = 'AUTHORIZED';
     }
@@ -554,7 +564,11 @@ export default function App() {
   };
 
   // Security Authorization Check:
-  const isUserAuthorized = currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'AUTHORIZED');
+  const isUserAuthorized = currentUser && (
+    currentUser.role === 'OWNER' ||
+    currentUser.role === 'ADMIN' ||
+    currentUser.role === 'AUTHORIZED'
+  );
   const pendingRequestsCount = accessRequests.filter((r) => r.status === 'PENDING').length;
 
   return (
@@ -608,6 +622,7 @@ export default function App() {
             currentUser={currentUser}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
             onRequestAccess={handleRequestAccess}
+            onLoginDirect={handleLogin}
             ownerEmail={OWNER_EMAIL}
             hasPendingRequest={
               currentUser
