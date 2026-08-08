@@ -217,17 +217,13 @@ export default function App() {
     };
   }, []);
 
-  // Current logged in Gmail user state (Default to system owner mikiskymew@gmail.com)
+  // Current logged in Gmail user state
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('hvac_current_user');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return {
-      email: SUPER_OWNER_EMAIL,
-      name: 'เจ้าของระบบ (System Owner)',
-      role: 'OWNER'
-    };
+    return null;
   });
 
   // Security Auth Modals State
@@ -589,6 +585,7 @@ export default function App() {
           onOpenImporterModal={() => setIsImporterOpen(true)}
           onOpenSalesReportModal={() => setIsSalesReportOpen(true)}
           onOpenGoogleDriveModal={() => setIsGoogleDriveOpen(true)}
+          onLogout={handleLogout}
         />
 
         {/* Realtime Order Email Alert Toast Banner */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, Search, ChevronRight, X, ShieldCheck, LogIn, Lock, FileSpreadsheet, TrendingUp, HardDrive } from 'lucide-react';
+import { SlidersHorizontal, Search, ChevronRight, X, ShieldCheck, LogIn, Lock, FileSpreadsheet, TrendingUp, HardDrive, LogOut } from 'lucide-react';
 import { AuthUser } from '../types';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ interface HeaderProps {
   onOpenImporterModal?: () => void;
   onOpenSalesReportModal?: () => void;
   onOpenGoogleDriveModal?: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,7 +30,8 @@ export const Header: React.FC<HeaderProps> = ({
   pendingRequestsCount,
   onOpenImporterModal,
   onOpenSalesReportModal,
-  onOpenGoogleDriveModal
+  onOpenGoogleDriveModal,
+  onLogout
 }) => {
   const [showSearch, setShowSearch] = useState(false);
 
@@ -76,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="w-4 h-4 rounded-full bg-amber-400 text-black text-[10px] font-black flex items-center justify-center">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G'}
                 </div>
-                <span className="max-w-[90px] sm:max-w-[130px] truncate">{currentUser.email}</span>
+                <span className="max-w-[80px] sm:max-w-[120px] truncate">{currentUser.email}</span>
                 <span className={`text-[9px] px-1 rounded font-mono ${
                   currentUser.role === 'OWNER' 
                     ? 'bg-amber-400 text-black font-extrabold' 
@@ -87,6 +89,17 @@ export const Header: React.FC<HeaderProps> = ({
                   {currentUser.role === 'OWNER' ? 'SUPER' : currentUser.role === 'ADMIN' ? 'ADMIN' : 'CLIENT'}
                 </span>
               </button>
+
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="bg-red-900/60 hover:bg-red-800 text-red-200 px-2 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 border border-red-700 transition-all"
+                  title="ออกจากระบบ"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">ออก</span>
+                </button>
+              )}
             </div>
           ) : (
             <button

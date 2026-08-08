@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AuthUser } from '../types';
-import { ShieldAlert, LogIn, Mail, Send, CheckCircle2, Lock, ArrowRight, UserCheck, AlertCircle } from 'lucide-react';
+import { LogIn, Mail, Send, CheckCircle2, Lock, ArrowRight, AlertCircle, ShieldCheck, Sparkles, Building2 } from 'lucide-react';
 
 interface AccessDeniedViewProps {
   currentUser: AuthUser | null;
@@ -40,32 +40,37 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-amber-400 space-y-5 text-center relative overflow-hidden">
+    <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-amber-400 space-y-5 text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         {/* Yellow Header Banner Accent */}
-        <div className="absolute top-0 left-0 right-0 h-3 bg-amber-400" />
+        <div className="absolute top-0 left-0 right-0 h-3 bg-[#E8C228]" />
 
-        {/* Lock Icon Badge */}
-        <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-inner border border-amber-300">
-          <Lock className="w-8 h-8 stroke-[2.5]" />
+        {/* Deeprom Air Welcome Brand Badge */}
+        <div className="pt-2">
+          <div className="w-16 h-16 rounded-3xl bg-[#18181B] text-amber-400 flex items-center justify-center mx-auto shadow-lg border-2 border-amber-400">
+            <Building2 className="w-8 h-8" />
+          </div>
         </div>
 
         <div>
-          <span className="bg-amber-400 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest inline-block mb-2">
-            RESTRICTED ACCESS • เฉพาะผู้ได้รับอนุมัติ
+          <span className="bg-amber-400 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest inline-flex items-center space-x-1 mb-2">
+            <ShieldCheck className="w-3 h-3 text-black" />
+            <span>MEMBER ACCESS GATE • ระบบสมาชิก</span>
           </span>
-          <h2 className="text-xl font-extrabold text-neutral-900 tracking-tight">
-            เข้าสู่ระบบระบุอีเมลก่อนใช้งาน
-          </h2>
-          <p className="text-xs text-neutral-600 font-medium mt-1.5 leading-relaxed">
-            แคตตาล็อกและระบบสั่งซื้ออุปกรณ์แอร์ดีพร้อม สงวนสิทธิ์เฉพาะผู้ได้รับอนุมัติจากผู้ดูแลระบบแล้วเท่านั้น
+          <h1 className="text-2xl font-black text-neutral-900 tracking-tight">
+            ยินดีต้อนรับสู่ ดีพร้อมแอร์
+          </h1>
+          <p className="text-xs text-neutral-600 font-semibold mt-1.5 leading-relaxed">
+            แคตตาล็อกและระบบสั่งซื้ออุปกรณ์รางครอบท่อแอร์ <br />
+            <span className="text-amber-800 font-bold">สงวนสิทธิ์เฉพาะสมาชิกที่ได้รับอนุญาตเท่านั้น</span>
           </p>
         </div>
 
-        {/* Direct Email Form */}
-        <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-200 text-left space-y-3">
-          <label className="block text-xs font-black text-neutral-800 uppercase tracking-wider">
-            กรอกอีเมลของคุณเพื่อเข้าสู่ระบบ:
+        {/* Email Entry Form */}
+        <div className="bg-amber-50/60 rounded-2xl p-4 border border-amber-200 text-left space-y-3">
+          <label className="block text-xs font-black text-neutral-900 uppercase tracking-wider flex items-center space-x-1">
+            <Mail className="w-3.5 h-3.5 text-amber-700" />
+            <span>กรอกอีเมล์ของคุณเพื่อเข้าสู่ระบบ:</span>
           </label>
 
           <form onSubmit={handleDirectSignIn} className="space-y-2">
@@ -75,31 +80,31 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                 required
                 value={inputEmail}
                 onChange={(e) => setInputEmail(e.target.value)}
-                placeholder="ใส่อีเมลของคุณ (เช่น yourname@gmail.com)"
-                className="w-full bg-white border-2 border-neutral-300 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold focus:outline-none focus:border-amber-500 transition-all"
+                placeholder="ใส่อีเมลของคุณ (เช่น user@gmail.com)"
+                className="w-full bg-white border-2 border-amber-300 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-amber-500 shadow-inner transition-all"
               />
-              <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+              <Mail className="w-4 h-4 text-amber-700 absolute left-3 top-3" />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-black hover:bg-neutral-800 text-amber-400 py-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 shadow-md active:scale-98 transition-all"
+              className="w-full bg-[#18181B] hover:bg-black text-amber-400 py-3 rounded-xl text-xs font-black flex items-center justify-center space-x-2 shadow-md active:scale-98 transition-all border border-amber-400/40"
             >
               <LogIn className="w-4 h-4" />
-              <span>เข้าสู่ระบบ / ตรวจสอบสิทธิ์</span>
+              <span>เข้าสู่ระบบ / ตรวจสอบสิทธิ์สมาชิก</span>
             </button>
           </form>
 
-          {/* Quick Preset Buttons for Easy Login Testing */}
-          <div className="pt-2 border-t border-neutral-200 space-y-1.5">
-            <span className="text-[10px] text-neutral-500 font-bold uppercase block">
-              หรือเลือกบัญชีทดสอบด่วน:
+          {/* Quick Preset Accounts for Easy Login Testing */}
+          <div className="pt-2 border-t border-amber-200/80 space-y-1.5">
+            <span className="text-[10px] text-amber-900 font-extrabold uppercase block">
+              เลือกอีเมลสมาชิกทดสอบด่วน:
             </span>
             <div className="grid grid-cols-2 gap-1.5 text-[11px]">
               <button
                 type="button"
                 onClick={() => onLoginDirect('mikiskymew@gmail.com', 'ผู้คุมสิทธิ์ระบบ')}
-                className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate"
+                className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate transition-all"
               >
                 👑 mikiskymew@gmail.com
                 <span className="block text-[9px] font-normal text-amber-800">ผู้คุมสิทธิ์ทั้งหมด</span>
@@ -107,56 +112,64 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
               <button
                 type="button"
                 onClick={() => onLoginDirect('sp-deeprom@gmail.com', 'แอดมินดีพร้อม')}
-                className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate"
+                className="bg-amber-100 border border-amber-300 hover:bg-amber-200 p-2 rounded-xl text-left font-bold text-amber-950 truncate transition-all"
               >
                 🛠️ sp-deeprom@gmail.com
-                <span className="block text-[9px] font-normal text-amber-800">แอดมิน ปรับราคา/ออเดอร์</span>
+                <span className="block text-[9px] font-normal text-amber-800">แอดมินดีพร้อมแอร์</span>
               </button>
               <button
                 type="button"
                 onClick={() => onLoginDirect('somchai.hvac@gmail.com', 'สมชาย ช่าง VIP')}
-                className="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 p-2 rounded-xl text-left font-bold text-emerald-950 truncate col-span-2"
+                className="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 p-2 rounded-xl text-left font-bold text-emerald-950 truncate col-span-2 transition-all"
               >
-                👷 somchai.hvac@gmail.com (ลูกค้าที่ได้รับอนุญาตแล้ว)
+                👷 somchai.hvac@gmail.com (ช่างผู้รับเหมาสมาชิก)
               </button>
             </div>
           </div>
         </div>
 
-        {/* Current User Pending Status Feedback */}
+        {/* Non-Member Warning Alert Box */}
         {currentUser && currentUser.role === 'PENDING' && (
-          <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl text-left space-y-2">
-            <div className="flex items-center space-x-2 text-amber-950">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-              <span className="font-extrabold text-xs">
-                อีเมล {currentUser.email} ยังไม่ได้รับอนุมัติเข้าใช้งาน
-              </span>
+          <div className="bg-red-50 border-2 border-red-400 p-4 rounded-2xl text-left space-y-2.5 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start space-x-2.5 text-red-950">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-black text-xs block text-red-900">
+                  ❌ ไม่พบอีเมล์นี้ในระบบสมาชิก!
+                </span>
+                <span className="text-[11px] text-red-700 font-medium block mt-0.5 font-mono">
+                  {currentUser.email}
+                </span>
+                <p className="text-[11px] text-red-800 font-medium mt-1 leading-relaxed">
+                  อีเมล์นี้ยังไม่ได้รับอนุมัติให้เข้าใช้งานระบบแคตตาล็อกแอร์ดีพร้อม ท่านจะไม่สามารถเข้าดูหรือสั่งซื้อสินค้าได้จนกว่าจะได้รับการอนุมัติ
+                </p>
+              </div>
             </div>
 
             {submitted || hasPendingRequest ? (
               <div className="bg-emerald-50 border border-emerald-300 p-3 rounded-xl text-emerald-950 text-xs font-bold flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>ส่งคำขอสมัครถึงผู้ดูแลระบบ ({ownerEmail}) แล้ว</span>
+                <span>ส่งคำขออนุมัติถึงผู้ดูแลระบบ ({ownerEmail}) เรียบร้อยแล้ว</span>
               </div>
             ) : (
               <button
                 onClick={handleSendRequest}
-                className="w-full bg-amber-400 hover:bg-amber-500 text-black py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 shadow-xs active:scale-98 transition-all"
+                className="w-full bg-amber-400 hover:bg-amber-500 text-black py-2.5 rounded-xl text-xs font-black flex items-center justify-center space-x-2 shadow-xs active:scale-98 transition-all"
               >
                 <Send className="w-4 h-4" />
-                <span>กดที่นี่เพื่อส่งคำขอเข้าใช้งานระบบ</span>
+                <span>กดที่นี่เพื่อยื่นคำขอสมัครสมาชิก / ขออนุมัติ</span>
               </button>
             )}
           </div>
         )}
 
-        {/* Contact Owner Action */}
+        {/* Footer info & Contact */}
         <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs font-bold text-neutral-600">
           <button
             onClick={onOpenAuthModal}
             className="hover:text-black flex items-center space-x-1"
           >
-            <span>เลือกบัญชีอื่นๆ</span>
+            <span>สลับหรือเลือกบัญชีอื่น</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
 
@@ -165,10 +178,11 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
             className="hover:text-black flex items-center space-x-1 text-neutral-500"
           >
             <Mail className="w-3.5 h-3.5" />
-            <span>ติดต่อผู้ดูแลระบบ</span>
+            <span>ติดต่อแอดมิน ({ownerEmail})</span>
           </a>
         </div>
       </div>
     </div>
   );
 };
+
