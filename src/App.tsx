@@ -589,14 +589,34 @@ export default function App() {
       shippingAddress: user.address
     };
 
+    // Deduct stock from products and update Firestore
+    const updatedProducts = products.map((prod) => {
+      const itemInOrder = items.find((i) => i.product.id === prod.id);
+      if (itemInOrder) {
+        const newStock = Math.max(0, prod.stock - itemInOrder.quantity);
+        return {
+          ...prod,
+          stock: newStock,
+          isSoldOut: newStock === 0
+        };
+      }
+      return prod;
+    });
+
+    setProducts(updatedProducts);
+    await saveAllProductsToFirestore(updatedProducts);
+
     setOrders((prev) => [newOrder, ...prev]);
     await saveOrderToFirestore(newOrder);
 
     // Trigger Email Notification targeting sp.deeprom@gmail.com
     sendOrderEmailNotification(newOrder, user.name, user.phone);
 
+    // Clear cart
+    setCart({});
+
     // Show Toast Confirmation
-    setOrderToastMsg(`ส่งข้อมูลคำสั่งซื้อ ${newOrder.id} ไปยังระบบเรียบร้อยแล้ว`);
+    setOrderToastMsg(`ส่งข้อมูลคำสั่งซื้อ ${newOrder.id} ไปยังระบบ ตัดสต๊อก และส่งอีเมลเรียบร้อยแล้ว`);
     setTimeout(() => {
       setOrderToastMsg(null);
     }, 6000);

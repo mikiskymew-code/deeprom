@@ -104,11 +104,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <span>ใบกำกับภาษี:</span>
                 <span className="font-medium text-black">{requestTaxInvoice ? `ออกในนาม ${user.companyName}` : 'ไม่รับ'}</span>
               </div>
-              <div className="pt-2 border-t border-neutral-200 flex items-center justify-between text-[#06C755] font-extrabold text-[11px]">
-                <span className="flex items-center space-x-1">
+              <div className="pt-2 border-t border-neutral-200 space-y-1">
+                <div className="flex items-center space-x-1.5 text-[#06C755] font-extrabold text-[11px]">
                   <span className="w-2 h-2 rounded-full bg-[#06C755] animate-pulse" />
-                  <span>ส่งการแจ้งเตือน LINE Notify ถึงเจ้าของร้านเรียบร้อยแล้ว</span>
-                </span>
+                  <span>ส่งแจ้งเตือนอีเมลคำสั่งซื้อไปที่ sp-deeprom@gmail.com เรียบร้อยแล้ว</span>
+                </div>
+                <div className="text-[10px] text-neutral-500 font-medium">
+                  บันทึกข้อมูลลงฐานข้อมูล Firestore & หักสต๊อกสินค้าเรียบร้อยแล้ว
+                </div>
               </div>
             </div>
 
